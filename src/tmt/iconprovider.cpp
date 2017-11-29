@@ -1,77 +1,35 @@
-#include "stdafx.h"
+#include "tmt.h"
+#include <stdlib.h>
 
-#define CONFIG_REG_KEY "SOFTWARE\\Microsoft\\Windows\\CurrentVersion\\Explorer"
-#define CONFIG_REG_CMC "ContextMenuConfig"
-#define CONFIG_REG_TMTITLE "ToggleMenuTitle"
 
-#define CONFIG_USEIMMERSIVEMENU 0x01
-#define CONFIG_HASICON 0x02
+#define ICON_SETTING_INDEX 21
+#define ICON_SHOWDESKTOP_INDEX 34
 
-LPWSTR GetToggleMenuTitle() {
-	HKEY hKey;
-	RegOpenKeyEx(HKEY_CURRENT_USER, TEXT(CONFIG_REG_KEY), 0, KEY_QUERY_VALUE | KEY_SET_VALUE, &hKey);
-	DWORD dwType;
-	DWORD dwSize;
-	bool ret = RegQueryValueEx(hKey, TEXT(CONFIG_REG_TMTITLE), 0, &dwType, NULL, &dwSize) == ERROR_SUCCESS;
+HBITMAP MyIcons[MyIcons_Count];
 
-	if (!ret)
-		return NULL;
-
-	LPWSTR title = (LPWSTR)malloc(sizeof(WCHAR) * dwSize);
-
-	RegQueryValueEx(hKey, TEXT(CONFIG_REG_TMTITLE), 0, &dwType, (LPBYTE)title, &dwSize);
-	return title;
+HBITMAP MyIcons_Get(unsigned char index) {
+	return MyIcons[index];
 }
 
-void SetMyConfig(DWORD d) {
-	HKEY hKey;
-	RegOpenKeyEx(HKEY_CURRENT_USER, TEXT(CONFIG_REG_KEY), 0, KEY_SET_VALUE, &hKey);
-	RegSetValueEx(hKey, TEXT(CONFIG_REG_CMC), 0, REG_DWORD, (LPBYTE)&d, sizeof(d));
-	RegCloseKey(hKey);
+void MyIcons_Load() {
+	HICON hIcon = NULL;
+	ExtractIconEx(L"shell32.dll", ICON_SETTING_INDEX, NULL, &hIcon, 1);
+	MyIcons[MYICON_SETTING] = IconToBitmap(hIcon, DPI_SCALE(16));
+	DestroyIcon(hIcon);
+
+	ExtractIconEx(L"taskmgr.exe", 0, NULL, &hIcon, 1);
+	MyIcons[MYICON_TASKMGR] = IconToBitmap(hIcon, DPI_SCALE(16));
+	DestroyIcon(hIcon);
+
+	ExtractIconEx(L"shell32.dll", ICON_SHOWDESKTOP_INDEX, NULL, &hIcon, 1);
+	MyIcons[MYICON_SHOWDESKTOP] = IconToBitmap(hIcon, DPI_SCALE(16));
+	DestroyIcon(hIcon);
 }
 
-DWORD GetMyConfig() {
-	HKEY hKey;
-	RegOpenKeyEx(HKEY_CURRENT_USER, TEXT(CONFIG_REG_KEY), 0, KEY_QUERY_VALUE | KEY_SET_VALUE, &hKey);
-	DWORD dwType = REG_DWORD;
-	DWORD dwSize = 4;
-	DWORD data;
-	bool ret = RegQueryValueEx(hKey, TEXT(CONFIG_REG_CMC), 0, &dwType, (LPBYTE)&data, &dwSize) == ERROR_SUCCESS;
-
-	if (!ret) {
-		data = 0;
-		RegSetValueEx(hKey, TEXT(CONFIG_REG_CMC), 0, REG_DWORD, (LPBYTE)&data, sizeof(data));
-	}
-
-	RegCloseKey(hKey);
-	return data;
-}
-
-
-int GetDPI() {
-	HDC hdc = GetDC(NULL);
-	int DPI = GetDeviceCaps(hdc, LOGPIXELSX);
-	ReleaseDC(NULL, hdc);
-	return DPI;
-}
-
-void ClassicMenu(HMENU hMenu) {
-	MENUINFO info;
-	info.cbSize = sizeof(MENUINFO);
-	info.fMask = MIM_BACKGROUND;
-	GetMenuInfo(hMenu, &info);
-	info.hbrBack = nullptr;
-	SetMenuInfo(hMenu, &info);
-
-	for (int i = 0; i < GetMenuItemCount(hMenu); i++) {
-		MENUITEMINFO menuInfo;
-		menuInfo.cbSize = sizeof(MENUITEMINFO);
-		menuInfo.fMask = MIIM_FTYPE | MIIM_SUBMENU;
-		GetMenuItemInfo(hMenu, i, true, &menuInfo);
-		menuInfo.fType &= ~MFT_OWNERDRAW;
-		menuInfo.fMask = MIIM_FTYPE;
-		SetMenuItemInfo(hMenu, i, true, &menuInfo);
-	}
+void MyIcons_Free() {
+	for (int i = 0; i < MyIcons_Count; i++)
+		if (MyIcons[i] != NULL)
+			DeleteObject(MyIcons[i]);
 }
 
 HBITMAP IconToBitmap(HICON hIcon, INT size = 0)
@@ -231,17 +189,3 @@ HBITMAP IconToBitmap(HICON hIcon, INT size = 0)
 
 	return dib;
 }
-
-
-
-
-
-
-
-
-
-
-
-
-
-

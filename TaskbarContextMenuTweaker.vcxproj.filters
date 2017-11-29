@@ -1,0 +1,75 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<Project ToolsVersion="4.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <ItemGroup>
+    <ClCompile Include="src\buffer.c">
+      <Filter>MinHook</Filter>
+    </ClCompile>
+    <ClCompile Include="src\HDE\hde32.c">
+      <Filter>MinHook</Filter>
+    </ClCompile>
+    <ClCompile Include="src\HDE\hde64.c">
+      <Filter>MinHook</Filter>
+    </ClCompile>
+    <ClCompile Include="src\trampoline.c">
+      <Filter>MinHook</Filter>
+    </ClCompile>
+    <ClCompile Include="src\hook.c">
+      <Filter>MinHook</Filter>
+    </ClCompile>
+    <ClCompile Include="src\tmt\configprovider.cpp">
+      <Filter>TaskbarContextMenuTweaker</Filter>
+    </ClCompile>
+    <ClCompile Include="src\tmt\dllmain.cpp">
+      <Filter>TaskbarContextMenuTweaker</Filter>
+    </ClCompile>
+    <ClCompile Include="src\tmt\iconprovider.cpp">
+      <Filter>TaskbarContextMenuTweaker</Filter>
+    </ClCompile>
+    <ClCompile Include="src\tmt\Injector.cpp">
+      <Filter>TaskbarContextMenuTweaker</Filter>
+    </ClCompile>
+    <ClCompile Include="src\tmt\menuhook.cpp">
+      <Filter>TaskbarContextMenuTweaker</Filter>
+    </ClCompile>
+  </ItemGroup>
+  <ItemGroup>
+    <ClInclude Include="src\buffer.h">
+      <Filter>MinHook</Filter>
+    </ClInclude>
+    <ClInclude Include="src\HDE\hde32.h">
+      <Filter>MinHook</Filter>
+    </ClInclude>
+    <ClInclude Include="src\HDE\hde64.h">
+      <Filter>MinHook</Filter>
+    </ClInclude>
+    <ClInclude Include="src\trampoline.h">
+      <Filter>MinHook</Filter>
+    </ClInclude>
+    <ClInclude Include="src\HDE\table64.h">
+      <Filter>MinHook</Filter>
+    </ClInclude>
+    <ClInclude Include="src\HDE\pstdint.h">
+      <Filter>MinHook</Filter>
+    </ClInclude>
+    <ClInclude Include="src\HDE\table32.h">
+      <Filter>MinHook</Filter>
+    </ClInclude>
+    <ClInclude Include="src\tmt\tmt.h">
+      <Filter>TaskbarContextMenuTweaker</Filter>
+    </ClInclude>
+    <ClInclude Include="include\MinHook.h">
+      <Filter>MinHook</Filter>
+    </ClInclude>
+  </ItemGroup>
+  <ItemGroup>
+    <Filter Include="MinHook">
+      <UniqueIdentifier>{fe3608b9-ea84-40ba-a4ad-fea7f6a463a8}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="TaskbarContextMenuTweaker">
+      <UniqueIdentifier>{8b4dd592-57d5-43ef-a662-0073a3534a94}</UniqueIdentifier>
+    </Filter>
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="README.md" />
+  </ItemGroup>
+</Project>

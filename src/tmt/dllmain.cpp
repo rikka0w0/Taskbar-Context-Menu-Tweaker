@@ -1,5 +1,6 @@
-// dllmain.cpp : Defines the entry point for the DLL application.
-#include "stdafx.h"
+#include "tmt.h"
+#include "../../include/MinHook.h"
+#include <stdlib.h>
 
 static HMODULE gLibModule = 0;
 
@@ -7,20 +8,20 @@ static LONG_PTR OldWndProc_TaskBar = 0;
 
 static HWND hWnd_TaskBar = 0;
 
-/*
-static DWORD WINAPI FreeSelf(LPVOID param) {
-FreeLibraryAndExitThread(gLibModule, EXIT_SUCCESS);
-}
-*/
-
-
 void RestoreWndProc() {
 	if (OldWndProc_TaskBar != NULL)
 		SetWindowLongPtr(hWnd_TaskBar, GWLP_WNDPROC, OldWndProc_TaskBar);
 }
 
 void CloseBackground() {
-	MyHook_Destroy();
+	// Disable the hooks
+	BOOL flag = MH_DisableHook(&TrackPopupMenu);
+	flag |= MH_DisableHook(&TrackPopupMenuEx);
+	flag |= MH_Uninitialize();	// Uninitialize MinHook.
+
+	if (flag != MH_OK)
+		MessageBoxW(0, L"An error occured while unloading hooks", L"Fatal Error", MB_ICONERROR);
+
 	MyIcons_Free();
 	RestoreWndProc();
 
@@ -28,19 +29,15 @@ void CloseBackground() {
 	CloseHandle(CreateThread(nullptr, 0, (LPTHREAD_START_ROUTINE)FreeLibraryAndExitThread, gLibModule, 0, nullptr));
 }
 
-
-
 LRESULT CALLBACK WndProc_TaskBar(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam) {
 	static HWND menuOwner;
 
 	switch (uMsg) {
-
 	case WM_TWEAKER: {
 		if (wParam == TWEAKER_EXIT)
 			CloseBackground();
 		return 0;
 	}
-
 
 	case WM_INITMENUPOPUP: {
 		LRESULT ret = WNDPROC(OldWndProc_TaskBar)(hwnd, uMsg, wParam, lParam);
@@ -104,10 +101,9 @@ LRESULT CALLBACK WndProc_TaskBar(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lPa
 		break;
 	}
 
-
-
 	return WNDPROC(OldWndProc_TaskBar)(hwnd, uMsg, wParam, lParam);
 }
+
 
 
 BOOL APIENTRY DllMain(HMODULE hModule, DWORD  ul_reason_for_call, LPVOID lpReserved)
@@ -129,14 +125,74 @@ BOOL APIENTRY DllMain(HMODULE hModule, DWORD  ul_reason_for_call, LPVOID lpReser
 }
 
 
+void ProcessResultIfPossible(BOOL ret, HMENU hMenu) {
+	MENUITEMINFO info;
+	info.cbSize = sizeof(MENUITEMINFO);
+	info.fMask = MIIM_STATE;
+	GetMenuItemInfo(hMenu, ret, MF_BYCOMMAND, &info);
 
+	if (ret == MENUID_TOGGLE) {
+		DWORD s = GetMyConfig();
+		if (info.fState & MFS_CHECKED)
+			s &= ~0x01;
+		else
+			s |= 0x01;
+		SetMyConfig(s);
+	}
+}
 
 
 //DWORD WINAPI ThreadProc(LPVOID lpParameter);
 
+typedef BOOL (WINAPI *FPT_TrackPopupMenu)(HMENU, UINT, int, int, int, HWND, CONST RECT*);
+typedef BOOL(WINAPI *FPT_TrackPopupMenuEx)(HMENU, UINT, int, int, HWND, LPTPMPARAMS);
+
+// Pointer for calling original MessageBoxW.
+FPT_TrackPopupMenu fpTrackPopupMenu;
+FPT_TrackPopupMenuEx fpTrackPopupMenuEx;
+
+// Detour function which overrides TrackPopupMenu.
+BOOL WINAPI HookedTrackPopupMenu(HMENU hMenu, UINT uFlags, int x, int y, int nReserved, HWND hWnd, CONST RECT* prcRect) {
+	if (IsWindow(hWnd))
+		ClassicMenuIfPossible(hWnd, hMenu);
+
+	BOOL ret = fpTrackPopupMenu(hMenu, uFlags, x, y, nReserved, hWnd, prcRect);
+
+	ProcessResultIfPossible(ret, hMenu);
+
+	return ret;
+}
+
+BOOL WINAPI HookedTrackPopupMenuEx(HMENU hMenu, UINT uFlags, int x, int y, HWND hWnd, LPTPMPARAMS lptpm) {
+	if (IsWindow(hWnd))
+		ClassicMenuIfPossible(hWnd, hMenu);
+	//
+	BOOL ret = fpTrackPopupMenuEx(hMenu, uFlags, x, y, hWnd, lptpm);
+
+	ProcessResultIfPossible(ret, hMenu);
+
+	return ret;
+}
 
 extern "C" _declspec(dllexport) DWORD  __cdecl  __TweakerInit(LPVOID unused) {
-	MyHook_Initialize();
+	//MyHook_Initialize();
+	if (MH_Initialize() != MH_OK)
+		MessageBoxW(0, L"Unable to initialize disassembler!", L"Fatal Error", MB_ICONERROR);
+	
+	// Create a hook for MessageBoxW, in disabled state.
+	BOOL flag = MH_CreateHook(&TrackPopupMenu, &HookedTrackPopupMenu,
+		reinterpret_cast<LPVOID*>(&fpTrackPopupMenu));
+	flag |= MH_CreateHook(&TrackPopupMenuEx, &HookedTrackPopupMenuEx,
+		reinterpret_cast<LPVOID*>(&fpTrackPopupMenuEx));
+	if (flag != MH_OK)
+		MessageBoxW(0, L"Unable to create hooks!", L"Fatal Error", MB_ICONERROR);
+
+	// Enable the hook
+	flag = MH_EnableHook(&TrackPopupMenu);
+	flag |= MH_EnableHook(&TrackPopupMenuEx);
+	if (flag != MH_OK)
+		MessageBoxW(0, L"Failed to enable hooks!", L"Fatal Error", MB_ICONERROR);
+
 	MyIcons_Load();
 
 	hWnd_TaskBar = FindWindow(TEXT("Shell_TrayWnd"), nullptr);
