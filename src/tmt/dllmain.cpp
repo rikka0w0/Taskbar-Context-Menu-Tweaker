@@ -1,6 +1,5 @@
 #include "tmt.h"
 #include "../../include/MinHook.h"
-#include <stdlib.h>
 
 static HMODULE gLibModule = 0;
 

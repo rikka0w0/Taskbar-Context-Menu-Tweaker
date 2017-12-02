@@ -1,5 +1,4 @@
 ﻿#include "tmt.h"
-#include <stdlib.h>
 
 #include <TlHelp32.h>
 

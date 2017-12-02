@@ -1,6 +1,4 @@
 #include "tmt.h"
-#include <stdlib.h>
-
 
 
 #define CONFIG_REG_KEY "SOFTWARE\\Microsoft\\Windows\\CurrentVersion\\Explorer"

@@ -31,6 +31,7 @@
     <ClCompile Include="src\tmt\menuhook.cpp">
       <Filter>TaskbarContextMenuTweaker</Filter>
     </ClCompile>
+    <ClCompile Include="src\MinCRT.cpp" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="src\buffer.h">
@@ -60,6 +61,7 @@
     <ClInclude Include="include\MinHook.h">
       <Filter>MinHook</Filter>
     </ClInclude>
+    <ClInclude Include="src\MinCRT.h" />
   </ItemGroup>
   <ItemGroup>
     <Filter Include="MinHook">

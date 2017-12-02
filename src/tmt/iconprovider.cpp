@@ -1,5 +1,4 @@
 #include "tmt.h"
-#include <stdlib.h>
 
 
 #define ICON_SETTING_INDEX 21
