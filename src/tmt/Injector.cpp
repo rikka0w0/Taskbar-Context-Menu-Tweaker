@@ -44,9 +44,9 @@ char* GetDLLPath() { //Caller should free the allocated memory!
     return dllPath;
 }
 
-bool InjectDLL(HWND hwnd, LPCSTR lpDllName) {
+bool InjectDLL(HWND targetHwnd, LPCSTR lpDllName, LPCSTR lpszCmdLine) {
     DWORD ProcessID;
-    DWORD ThreadID = GetWindowThreadProcessId(FindWindow(TEXT("Shell_TrayWnd"), nullptr), &ProcessID);
+    DWORD ThreadID = GetWindowThreadProcessId(targetHwnd, &ProcessID);
 
     HANDLE hProcess = OpenProcess(0xFFF, FALSE, ProcessID);	//Full Access
     if (hProcess == NULL) {
@@ -103,7 +103,23 @@ bool InjectDLL(HWND hwnd, LPCSTR lpDllName) {
         return false;
     }
 
-    hNewRemoteThread = CreateRemoteThread(hProcess, NULL, 0, (LPTHREAD_START_ROUTINE)lpLoadDll, hwnd, 0, &dwNewThreadId);
+	size_t cmdLineLen = strlen(lpszCmdLine);
+	LPVOID paramsCall = VirtualAllocEx(hProcess, NULL, sizeof(HWND) + sizeof(char) * (cmdLineLen + 1), MEM_COMMIT | MEM_RESERVE, PAGE_READWRITE);
+	if (paramsCall == NULL) {
+		MessageBox(0, L"Unable to locate remote memory for parameters", L"Error during injection", MB_ICONERROR);
+		CloseHandle(hProcess);
+		return false;
+	}
+
+	if (!WriteProcessMemory(hProcess, paramsCall, &targetHwnd, sizeof(HWND), NULL)
+		||
+		!WriteProcessMemory(hProcess, (char*)paramsCall + sizeof(HWND), lpszCmdLine, sizeof(CHAR) * (cmdLineLen + 1), NULL)) {
+		MessageBox(0, L"Unable to write parameters to remote memory", L"Error during injection", MB_ICONERROR);
+		CloseHandle(hProcess);
+		return false;
+	}
+
+    hNewRemoteThread = CreateRemoteThread(hProcess, NULL, 0, (LPTHREAD_START_ROUTINE)lpLoadDll, paramsCall, 0, &dwNewThreadId);
     if (hNewRemoteThread == NULL) {
         MessageBox(0, L"Fail to start the remote thread \"__TweakerInit\"", L"Error during injection", MB_ICONERROR);
         CloseHandle(hProcess);
@@ -137,7 +153,7 @@ extern "C" _declspec(dllexport) void __cdecl Inject(HWND hwnd, HINSTANCE hinst, 
 
     char* dllPath = GetDLLPath();
 
-    InjectDLL(targethWnd, dllPath);
+    InjectDLL(targethWnd, dllPath, lpszCmdLine);
     free(dllPath);
 
     return;

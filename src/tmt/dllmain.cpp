@@ -185,7 +185,7 @@ BOOL WINAPI HookedTrackPopupMenuEx(HMENU hMenu, UINT uFlags, int x, int y, HWND 
 	return ret;
 }
 
-extern "C" _declspec(dllexport) DWORD  __cdecl  __TweakerInit(LPVOID unused) {
+extern "C" _declspec(dllexport) DWORD  __cdecl  __TweakerInit(LPVOID param) {
 	//MyHook_Initialize();
 	if (MH_Initialize() != MH_OK)
 		MessageBoxW(0, L"Unable to initialize disassembler!", L"Fatal Error", MB_ICONERROR);
@@ -207,7 +207,7 @@ extern "C" _declspec(dllexport) DWORD  __cdecl  __TweakerInit(LPVOID unused) {
 	MyIcons_Load();
 
 	//hWnd_TaskBar = FindWindow(TEXT("Shell_TrayWnd"), nullptr);
-	hWnd_TaskBar = (HWND)unused;
+	hWnd_TaskBar = *(HWND*)param;
 	if (IsWindow(hWnd_TaskBar)) {
 		OldWndProc_TaskBar = GetWindowLongPtr(hWnd_TaskBar, GWLP_WNDPROC);
 		if (OldWndProc_TaskBar != 0)
@@ -221,7 +221,7 @@ extern "C" _declspec(dllexport) DWORD  __cdecl  __TweakerInit(LPVOID unused) {
 			MENU98_INIT menu98InitInfo;
 			menu98InitInfo.hWnd_TaskBar = hWnd_TaskBar;
 			menu98InitInfo.TrackPopupMenuEx = fpTrackPopupMenuEx;
-			menu98InitInfo.DPI = GetDPI();
+			menu98InitInfo.cmdLine = (char*)param + sizeof(HWND);
 			fpMenu98Init(&menu98InitInfo);
 		}
 	}

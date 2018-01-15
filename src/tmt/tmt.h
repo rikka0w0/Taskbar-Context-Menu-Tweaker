@@ -21,12 +21,15 @@ void ClassicMenuIfPossible(HWND hWnd, HMENU hMenu);
 
 
 //Config
+#define CONFIG_USEIMMERSIVEMENU 0x01
+#define CONFIG_HASICON 0x02
+#define CONFIG_HIDETOGGLE 0x04
 DWORD GetMyConfig();
 void SetMyConfig(DWORD d);
 LPWSTR GetToggleMenuTitle();
-#define UseImmersiveMenu() (GetMyConfig()&0x01)
-#define HasIcon() (GetMyConfig()&0x02)
-#define HideToggle() (GetMyConfig()&0x04)
+#define UseImmersiveMenu() (GetMyConfig()&CONFIG_USEIMMERSIVEMENU)
+#define HasIcon() (GetMyConfig()&CONFIG_HASICON)
+#define HideToggle() (GetMyConfig()&CONFIG_HIDETOGGLE)
 
 //Icon
 #define STANDARD_DPI 96

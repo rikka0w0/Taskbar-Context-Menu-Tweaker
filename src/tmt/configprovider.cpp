@@ -5,9 +5,6 @@
 #define CONFIG_REG_CMC "ContextMenuConfig"
 #define CONFIG_REG_TMTITLE "ToggleMenuTitle"
 
-#define CONFIG_USEIMMERSIVEMENU 0x01
-#define CONFIG_HASICON 0x02
-
 LPWSTR GetToggleMenuTitle() {
 	HKEY hKey;
 	RegOpenKeyEx(HKEY_CURRENT_USER, TEXT(CONFIG_REG_KEY), 0, KEY_QUERY_VALUE | KEY_SET_VALUE, &hKey);

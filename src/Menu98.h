@@ -7,7 +7,7 @@
 typedef struct MENU98_INIT_T {
 	HWND hWnd_TaskBar;
 	void* TrackPopupMenuEx;
-	int DPI;
+	LPSTR cmdLine;
 } MENU98_INIT;
 
 typedef DWORD(__cdecl *FPT___Menu98Init)(MENU98_INIT*);
