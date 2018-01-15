@@ -1,11 +1,14 @@
 #include "tmt.h"
 #include "../../include/MinHook.h"
+#include "../Menu98.h"
 
 static HMODULE gLibModule = 0;
 
 static LONG_PTR OldWndProc_TaskBar = 0;
 
 static HWND hWnd_TaskBar = 0;
+
+static HMODULE menu98Module = 0;
 
 void RestoreWndProc() {
 	if (OldWndProc_TaskBar != NULL)
@@ -24,7 +27,16 @@ void CloseBackground() {
 	MyIcons_Free();
 	RestoreWndProc();
 
-	//CloseHandle(CreateThread(nullptr, 0, (LPTHREAD_START_ROUTINE)FreeSelf, nullptr, 0, nullptr));
+	if (menu98Module != NULL) {
+		FPT___Menu98Unload fpMenu98Unload = (FPT___Menu98Unload)GetProcAddress(menu98Module, "__Menu98Unload");
+		if (fpMenu98Unload != NULL) {
+			fpMenu98Unload(NULL);
+		} else {
+			MessageBoxW(0, L"Failed to unload Menu98!", L"Fatal Error", MB_ICONERROR);
+		}
+	}
+		
+
 	CloseHandle(CreateThread(nullptr, 0, (LPTHREAD_START_ROUTINE)FreeLibraryAndExitThread, gLibModule, 0, nullptr));
 }
 
@@ -194,11 +206,24 @@ extern "C" _declspec(dllexport) DWORD  __cdecl  __TweakerInit(LPVOID unused) {
 
 	MyIcons_Load();
 
-	hWnd_TaskBar = FindWindow(TEXT("Shell_TrayWnd"), nullptr);
+	//hWnd_TaskBar = FindWindow(TEXT("Shell_TrayWnd"), nullptr);
+	hWnd_TaskBar = (HWND)unused;
 	if (IsWindow(hWnd_TaskBar)) {
 		OldWndProc_TaskBar = GetWindowLongPtr(hWnd_TaskBar, GWLP_WNDPROC);
 		if (OldWndProc_TaskBar != 0)
 			SetWindowLongPtr(hWnd_TaskBar, GWLP_WNDPROC, (LONG_PTR)&WndProc_TaskBar);
+	}
+
+	menu98Module = LoadLibraryA("menu98.dll");
+	if (menu98Module != NULL) {
+		FPT___Menu98Init fpMenu98Init = (FPT___Menu98Init)GetProcAddress(menu98Module, "__Menu98Init");
+		if (fpMenu98Init != NULL) {
+			MENU98_INIT menu98InitInfo;
+			menu98InitInfo.hWnd_TaskBar = hWnd_TaskBar;
+			menu98InitInfo.TrackPopupMenuEx = fpTrackPopupMenuEx;
+			menu98InitInfo.DPI = GetDPI();
+			fpMenu98Init(&menu98InitInfo);
+		}
 	}
 
 	return 0;

@@ -62,6 +62,7 @@
       <Filter>MinHook</Filter>
     </ClInclude>
     <ClInclude Include="src\MinCRT.h" />
+    <ClInclude Include="src\Menu98.h" />
   </ItemGroup>
   <ItemGroup>
     <Filter Include="MinHook">
