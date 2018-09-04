@@ -21,10 +21,11 @@ number of crashes.
 
 
 # Supported OS
-1. Windows 10 10240, 10586, 14393, 10593 and 16299 (both x86 and x64)
-1. Including technical preview versions
+1. Windows 10 10240, 10586, 14393, 10593, 16299, 17134 (both x86 and x64, up to 1803)
 1. Windows Server 2016
+1. __MAY__ work on technical preview versions
 1. __MAY__ work on Windows PE systems (No guarantee)
+1. Arm and Arm64 are not supported yet but will be supported in the future, feel free to post an issue if you really want one
 
 Developed with VC++ 2017
 
