@@ -7,8 +7,52 @@ static HMODULE gLibModule = 0;
 static LONG_PTR OldWndProc_TaskBar = 0;
 
 static HWND hWnd_TaskBar = 0;
+static HWND hWnd_ATL1 = 0;
+static HWND hWnd_ATL2 = 0;
 
 static HMODULE menu98Module = 0;
+
+void ClassicMenu(HMENU hMenu) {
+	MENUINFO info;
+	info.cbSize = sizeof(MENUINFO);
+	info.fMask = MIM_BACKGROUND;
+	GetMenuInfo(hMenu, &info);
+	info.hbrBack = nullptr;
+	SetMenuInfo(hMenu, &info);
+
+	for (int i = 0; i < GetMenuItemCount(hMenu); i++) {
+		MENUITEMINFO menuInfo;
+		menuInfo.cbSize = sizeof(MENUITEMINFO);
+		menuInfo.fMask = MIIM_FTYPE | MIIM_SUBMENU;
+		GetMenuItemInfo(hMenu, i, true, &menuInfo);
+		menuInfo.fType &= ~MFT_OWNERDRAW;
+		menuInfo.fMask = MIIM_FTYPE;
+		SetMenuItemInfo(hMenu, i, true, &menuInfo);
+	}
+}
+
+void ClassicMenuIfPossible(HWND hWnd, HMENU hMenu) {
+	if (UseImmersiveMenu())
+		return;
+
+	char clsName[256];
+	GetClassNameA(hWnd, clsName, 256);
+
+	if (strcmp(clsName, "TrayShowDesktopButtonWClass") == 0) {
+		if (HasIcon())
+			SetMenuItemBitmaps(hMenu, 0x1A2D, MF_BYCOMMAND, MyIcons_Get(MYICON_SHOWDESKTOP), MyIcons_Get(MYICON_SHOWDESKTOP));
+		ClassicMenu(hMenu);
+	}
+	else if (
+		strcmp(clsName, "NotificationsMenuOwner") == 0 ||		// Notification Button
+		strcmp(clsName, "LauncherTipWnd") == 0 ||				// Win+X menu
+		strcmp(clsName, "MultitaskingViewFrame") == 0 ||		// Multitask Button
+		hWnd == hWnd_ATL1 || hWnd == hWnd_ATL2) {				// Network Icon and Volumn Icon
+		ClassicMenu(hMenu);
+		for (int i = 0; i < GetMenuItemCount(hMenu); i++)
+			ClassicMenu(GetSubMenu(hMenu, i));
+	}
+}
 
 void RestoreWndProc() {
 	if (OldWndProc_TaskBar != NULL)
@@ -185,6 +229,25 @@ BOOL WINAPI HookedTrackPopupMenuEx(HMENU hMenu, UINT uFlags, int x, int y, HWND 
 	return ret;
 }
 
+
+BOOL CALLBACK EnumWindowsCallBack(HWND hwnd, LPARAM lParam) {
+	if (GetWindowThreadProcessId(hwnd, NULL) == (DWORD)lParam) {
+		// Window belong to the same thread
+		char className[255];
+		GetClassNameA(hwnd, className, sizeof(className));
+
+		if (className[0] == 'A' && className[1] == 'T' && className[2] == 'L') {		
+			if (GetWindowTextLengthA(hwnd) == 0) {
+				hWnd_ATL1 = hwnd;
+			} else {
+				hWnd_ATL2 = hwnd;
+			}
+		}
+	}
+
+	return TRUE;
+}
+
 extern "C" _declspec(dllexport) DWORD  __cdecl  __TweakerInit(LPVOID param) {
 	//MyHook_Initialize();
 	if (MH_Initialize() != MH_OK)
@@ -226,5 +289,11 @@ extern "C" _declspec(dllexport) DWORD  __cdecl  __TweakerInit(LPVOID param) {
 		}
 	}
 
+	// Network & Volumn
+	HWND hPNIHiddenWnd = FindWindowA("PNIHiddenWnd", nullptr);
+	EnumWindows(EnumWindowsCallBack, GetWindowThreadProcessId(hPNIHiddenWnd, NULL));
+
+	// Notification
+	HWND hNotificationWindow = FindWindowA("NotifyIconOverflowWindow", nullptr); // EnumChildWindows 
 	return 0;
 }

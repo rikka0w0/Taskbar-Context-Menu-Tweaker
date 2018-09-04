@@ -15,11 +15,6 @@ void MyIcons_Free();
 #define MYICON_SHOWDESKTOP 2
 #define MyIcons_Count 3
 
-//Menu Hook
-void ClassicMenu(HMENU hMenu);
-void ClassicMenuIfPossible(HWND hWnd, HMENU hMenu);
-
-
 //Config
 #define CONFIG_USEIMMERSIVEMENU 0x01
 #define CONFIG_HASICON 0x02

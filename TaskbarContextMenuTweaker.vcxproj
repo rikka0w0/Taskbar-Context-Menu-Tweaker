@@ -197,7 +197,6 @@
     <ClCompile Include="src\tmt\dllmain.cpp" />
     <ClCompile Include="src\tmt\iconprovider.cpp" />
     <ClCompile Include="src\tmt\Injector.cpp" />
-    <ClCompile Include="src\tmt\menuhook.cpp" />
     <ClCompile Include="src\trampoline.c" />
   </ItemGroup>
   <ItemGroup>
