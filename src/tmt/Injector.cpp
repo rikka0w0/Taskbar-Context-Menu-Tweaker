@@ -97,7 +97,7 @@ bool InjectDLL(HWND targetHwnd, LPCSTR lpDllName, LPCSTR lpszCmdLine) {
 
     //Initialize ---------------------------------------------------------------------------------------------
     lpLoadDll = GetProcAddress(GetCurrentModule(), "__TweakerInit");
-    if (lpLoadDll == nullptr) {
+    if (lpLoadDll == NULL) {
         MessageBox(0, L"Unable to locate the remote thread \"__TweakerInit\"", L"Error during injection", MB_ICONERROR);
         CloseHandle(hProcess);
         return false;
@@ -137,14 +137,14 @@ extern "C" _declspec(dllexport) void __cdecl Inject(HWND hwnd, HINSTANCE hinst, 
     HWND targethWnd = NULL;
 
 
-    targethWnd = FindWindow(TEXT("Shell_TrayWnd"), nullptr);
+    targethWnd = FindWindow(TEXT("Shell_TrayWnd"), NULL);
     int t = 0;
 
-    while (targethWnd == nullptr) {
+    while (targethWnd == NULL) {
         Sleep(500);
-        targethWnd = FindWindow(TEXT("Shell_TrayWnd"), nullptr);
+        targethWnd = FindWindow(TEXT("Shell_TrayWnd"), NULL);
         t++;
-        if (t > 60 && targethWnd == nullptr) {
+        if (t > 60 && targethWnd == NULL) {
             MessageBox(0, TEXT("Fail to inject the dll into explorer.exe, please check the injection parameters!"), TEXT("Error during injection"), MB_ICONERROR);
             return;
         }
@@ -161,9 +161,9 @@ extern "C" _declspec(dllexport) void __cdecl Inject(HWND hwnd, HINSTANCE hinst, 
 
 extern "C" _declspec(dllexport) void __cdecl Release(HWND hwnd, HINSTANCE hinst, LPSTR lpszCmdLine, int nCmdShow)
 {
-	HWND hWndTaskBar = FindWindow(TEXT("Shell_TrayWnd"), nullptr);
+	HWND hWndTaskBar = FindWindow(TEXT("Shell_TrayWnd"), NULL);
 
-	if (hWndTaskBar == nullptr) {
+	if (hWndTaskBar == NULL) {
 		MessageBox(0, L"Fail to locate the dll from explorer.exe", L"Error", MB_ICONERROR);
 		return;
 	}

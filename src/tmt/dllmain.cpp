@@ -19,7 +19,7 @@ void ClassicMenu(HMENU hMenu) {
 	info.cbSize = sizeof(MENUINFO);
 	info.fMask = MIM_BACKGROUND;
 	GetMenuInfo(hMenu, &info);
-	info.hbrBack = nullptr;
+	info.hbrBack = NULL;
 	SetMenuInfo(hMenu, &info);
 
 	for (int i = 0; i < GetMenuItemCount(hMenu); i++) {
@@ -44,8 +44,7 @@ void ClassicMenuIfPossible(HWND hWnd, HMENU hMenu) {
 		if (HasIcon())
 			SetMenuItemBitmaps(hMenu, 0x1A2D, MF_BYCOMMAND, MyIcons_Get(MYICON_SHOWDESKTOP), MyIcons_Get(MYICON_SHOWDESKTOP));
 		ClassicMenu(hMenu);
-	}
-	else if (
+	} else if (
 		strcmp(clsName, "NotificationsMenuOwner") == 0 ||		// Notification Button
 		strcmp(clsName, "LauncherTipWnd") == 0 ||				// Win+X menu
 		strcmp(clsName, "MultitaskingViewFrame") == 0 ||		// Multitask Button
@@ -84,9 +83,9 @@ void CloseBackground() {
 			MessageBoxW(0, L"Failed to unload Menu98!", L"Fatal Error", MB_ICONERROR);
 		}
 	}
-		
 
-	CloseHandle(CreateThread(nullptr, 0, (LPTHREAD_START_ROUTINE)FreeLibraryAndExitThread, gLibModule, 0, nullptr));
+
+	CloseHandle(CreateThread(NULL, 0, (LPTHREAD_START_ROUTINE)FreeLibraryAndExitThread, gLibModule, 0, NULL));
 }
 
 LRESULT CALLBACK WndProc_TaskBar(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam) {
@@ -181,10 +180,8 @@ LRESULT CALLBACK WndProc_TaskBar_SecondScreen(HWND hwnd, UINT uMsg, WPARAM wPara
 	return fpWndProcOld(hwnd, uMsg, wParam, lParam);
 }
 
-BOOL APIENTRY DllMain(HMODULE hModule, DWORD  ul_reason_for_call, LPVOID lpReserved)
-{
-	switch (ul_reason_for_call)
-	{
+BOOL APIENTRY DllMain(HMODULE hModule, DWORD  ul_reason_for_call, LPVOID lpReserved) {
+	switch (ul_reason_for_call) {
 	case DLL_PROCESS_ATTACH:
 		gLibModule = hModule;
 		break;
@@ -249,7 +246,6 @@ BOOL WINAPI HookedTrackPopupMenuEx(HMENU hMenu, UINT uFlags, int x, int y, HWND 
 	return ret;
 }
 
-
 BOOL CALLBACK EnumWindowsCallBack(HWND hwnd, LPARAM lParam) {
 	if (GetWindowThreadProcessId(hwnd, NULL) == (DWORD)lParam) {
 		// Window belong to the same thread
@@ -272,7 +268,7 @@ extern "C" _declspec(dllexport) DWORD  __cdecl  __TweakerInit(LPVOID param) {
 	//MyHook_Initialize();
 	if (MH_Initialize() != MH_OK)
 		MessageBoxW(0, L"Unable to initialize disassembler!", L"Fatal Error", MB_ICONERROR);
-	
+
 	// Create a hook for MessageBoxW, in disabled state.
 	BOOL flag = MH_CreateHook(&TrackPopupMenu, &HookedTrackPopupMenu,
 		reinterpret_cast<LPVOID*>(&fpTrackPopupMenu));
@@ -289,7 +285,7 @@ extern "C" _declspec(dllexport) DWORD  __cdecl  __TweakerInit(LPVOID param) {
 
 	MyIcons_Load();
 
-	//hWnd_TaskBar = FindWindow(TEXT("Shell_TrayWnd"), nullptr);
+	//hWnd_TaskBar = FindWindow(TEXT("Shell_TrayWnd"), NULL);
 	hWnd_TaskBar = *(HWND*)param;
 	if (IsWindow(hWnd_TaskBar)) {
 		OldWndProc_TaskBar = GetWindowLongPtr(hWnd_TaskBar, GWLP_WNDPROC);
