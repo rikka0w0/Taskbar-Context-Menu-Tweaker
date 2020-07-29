@@ -60,6 +60,7 @@
     </ClInclude>
     <ClInclude Include="src\MinCRT.h" />
     <ClInclude Include="src\Menu98.h" />
+    <ClInclude Include="resource.h" />
   </ItemGroup>
   <ItemGroup>
     <Filter Include="MinHook">
@@ -71,5 +72,8 @@
   </ItemGroup>
   <ItemGroup>
     <None Include="README.md" />
+  </ItemGroup>
+  <ItemGroup>
+    <ResourceCompile Include="Resource.rc" />
   </ItemGroup>
 </Project>
