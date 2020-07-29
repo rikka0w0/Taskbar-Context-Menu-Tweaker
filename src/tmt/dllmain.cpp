@@ -4,9 +4,11 @@
 
 static HMODULE gLibModule = 0;
 
-static LONG_PTR OldWndProc_TaskBar = 0;
+static LONG_PTR OldWndProc_TaskBar = NULL;
+static LONG_PTR OldWndProc_TaskBar_SecondScreen = NULL;
 
 static HWND hWnd_TaskBar = 0;
+static HWND hWnd_TaskBar_SecondScreen = NULL;
 static HWND hWnd_ATL1 = 0;
 static HWND hWnd_ATL2 = 0;
 
@@ -57,6 +59,9 @@ void ClassicMenuIfPossible(HWND hWnd, HMENU hMenu) {
 void RestoreWndProc() {
 	if (OldWndProc_TaskBar != NULL)
 		SetWindowLongPtr(hWnd_TaskBar, GWLP_WNDPROC, OldWndProc_TaskBar);
+
+	if (OldWndProc_TaskBar_SecondScreen != NULL)
+		SetWindowLongPtr(hWnd_TaskBar_SecondScreen, GWLP_WNDPROC, OldWndProc_TaskBar_SecondScreen);
 }
 
 void CloseBackground() {
@@ -85,7 +90,7 @@ void CloseBackground() {
 }
 
 LRESULT CALLBACK WndProc_TaskBar(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam) {
-	static HWND menuOwner;
+	WNDPROC fpWndProcOld = WNDPROC(OldWndProc_TaskBar);
 
 	switch (uMsg) {
 	case WM_TWEAKER: {
@@ -95,7 +100,7 @@ LRESULT CALLBACK WndProc_TaskBar(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lPa
 	}
 
 	case WM_INITMENUPOPUP: {
-		LRESULT ret = WNDPROC(OldWndProc_TaskBar)(hwnd, uMsg, wParam, lParam);
+		LRESULT ret = fpWndProcOld(hwnd, uMsg, wParam, lParam);
 
 		if (!UseImmersiveMenu())
 			ClassicMenu((HMENU)wParam);
@@ -149,16 +154,32 @@ LRESULT CALLBACK WndProc_TaskBar(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lPa
 		CheckMenuItem(hMenu, MENUID_TOGGLE, UseImmersiveMenu() ? MF_CHECKED : MF_UNCHECKED);
 		break;
 	}
-
-	case WM_CONTEXTMENU:
-		menuOwner = (HWND)wParam;
-		break;
 	}
 
-	return WNDPROC(OldWndProc_TaskBar)(hwnd, uMsg, wParam, lParam);
+	return fpWndProcOld(hwnd, uMsg, wParam, lParam);
 }
 
+LRESULT CALLBACK WndProc_TaskBar_SecondScreen(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam) {
+	WNDPROC fpWndProcOld = WNDPROC(OldWndProc_TaskBar_SecondScreen);
 
+	if (uMsg == WM_INITMENUPOPUP) {
+		LRESULT ret = fpWndProcOld(hwnd, uMsg, wParam, lParam);
+
+		if (!UseImmersiveMenu())
+			ClassicMenu((HMENU)wParam);
+
+		if (!HasIcon())
+			return ret;
+
+		SetMenuItemBitmaps((HMENU)wParam, 0x19d, MF_BYCOMMAND, MyIcons_Get(MYICON_SETTING), MyIcons_Get(MYICON_SETTING));
+		SetMenuItemBitmaps((HMENU)wParam, 0x1a4, MF_BYCOMMAND, MyIcons_Get(MYICON_TASKMGR), MyIcons_Get(MYICON_TASKMGR));
+		SetMenuItemBitmaps((HMENU)wParam, 0x197, MF_BYCOMMAND, MyIcons_Get(MYICON_SHOWDESKTOP), MyIcons_Get(MYICON_SHOWDESKTOP));
+
+		return ret;
+	}
+
+	return fpWndProcOld(hwnd, uMsg, wParam, lParam);
+}
 
 BOOL APIENTRY DllMain(HMODULE hModule, DWORD  ul_reason_for_call, LPVOID lpReserved)
 {
@@ -272,8 +293,16 @@ extern "C" _declspec(dllexport) DWORD  __cdecl  __TweakerInit(LPVOID param) {
 	hWnd_TaskBar = *(HWND*)param;
 	if (IsWindow(hWnd_TaskBar)) {
 		OldWndProc_TaskBar = GetWindowLongPtr(hWnd_TaskBar, GWLP_WNDPROC);
-		if (OldWndProc_TaskBar != 0)
+		if (OldWndProc_TaskBar != NULL)
 			SetWindowLongPtr(hWnd_TaskBar, GWLP_WNDPROC, (LONG_PTR)&WndProc_TaskBar);
+	}
+
+	// The taskbar on the second screen
+	hWnd_TaskBar_SecondScreen = FindWindowA("Shell_SecondaryTrayWnd", NULL);
+	if (IsWindow(hWnd_TaskBar_SecondScreen)) {
+		OldWndProc_TaskBar_SecondScreen = GetWindowLongPtr(hWnd_TaskBar_SecondScreen, GWLP_WNDPROC);
+		if (OldWndProc_TaskBar_SecondScreen != NULL)
+			SetWindowLongPtr(hWnd_TaskBar_SecondScreen, GWLP_WNDPROC, (LONG_PTR)&WndProc_TaskBar_SecondScreen);
 	}
 
 	menu98Module = LoadLibraryA("menu98.dll");
@@ -289,10 +318,10 @@ extern "C" _declspec(dllexport) DWORD  __cdecl  __TweakerInit(LPVOID param) {
 	}
 
 	// Network & Volumn
-	HWND hPNIHiddenWnd = FindWindowA("PNIHiddenWnd", nullptr);
+	HWND hPNIHiddenWnd = FindWindowA("PNIHiddenWnd", NULL);
 	EnumWindows(EnumWindowsCallBack, GetWindowThreadProcessId(hPNIHiddenWnd, NULL));
 
 	// Notification
-	HWND hNotificationWindow = FindWindowA("NotifyIconOverflowWindow", nullptr); // EnumChildWindows 
+	HWND hNotificationWindow = FindWindowA("NotifyIconOverflowWindow", NULL); // EnumChildWindows 
 	return 0;
 }
